@@ -559,7 +559,7 @@ export default function DepthMidas() {
                     ? <div style={{gridColumn:"1/-1",textAlign:"center",padding:40,color:"#5a5470",fontSize:12}}>Inga bilder hittades</div>
                     : modalImages.map((img,i)=>(
                         <div key={i} className="th" onClick={()=>pickImage(img)} title={img.title}>
-                          <img src={img.thumb} alt={img.title} loading="lazy" crossOrigin="anonymous" onLoad={e=>{e.currentTarget.style.opacity='1';}} onError={e=>{e.currentTarget.style.opacity='.25';e.currentTarget.parentElement.style.animation='none';}}/>
+                          <img src={img.thumb} alt={img.title} loading="lazy" crossOrigin="anonymous" onLoad={e=>{e.currentTarget.style.opacity='1';e.currentTarget.parentElement.style.animation='none';}} onError={e=>{e.currentTarget.style.opacity='.25';e.currentTarget.parentElement.style.animation='none';}}/>
                         </div>
                       ))
                 }

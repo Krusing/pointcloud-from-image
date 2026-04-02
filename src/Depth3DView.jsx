@@ -594,9 +594,19 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
         maxCorr[lm.region] = Math.abs(lm.corr);
     }
 
+    // Eye socket rim landmarks have mixed-sign corr values (some parts of the rim
+    // protrude, others recess relative to the face mean). Using per-landmark corr
+    // causes a bowl/crater effect when weight is negative. Use the region mean instead
+    // so the entire socket moves uniformly in one direction.
+    const eyeLms = faceCorrections.landmarks.filter(l => l.region === 'eye');
+    const eyeMeanCorr = eyeLms.length
+      ? eyeLms.reduce((s, l) => s + l.corr, 0) / eyeLms.length
+      : 0;
+
     for (const lm of faceCorrections.landmarks) {
       const weight = faceSlidersRef.current[lm.region] ?? 0;
       if (weight === 0 || !maxCorr[lm.region]) continue;
+      const corr   = lm.region === 'eye' ? eyeMeanCorr : lm.corr;
       const scale  = faceMean * FRAC[lm.region] / maxCorr[lm.region] * weight;
       const sigmaV = SIGMA[lm.region] * (GRID - 1);
       const sig2   = 2 * sigmaV * sigmaV;
@@ -610,7 +620,7 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
           const w  = Math.exp(-(dx * dx + dy * dy) / sig2);
           const idx = vj * GRID + vi;
           depthsRef.current[idx] = Math.max(0,
-            depthsRef.current[idx] + lm.corr * scale * w
+            depthsRef.current[idx] + corr * scale * w
           );
         }
       }
