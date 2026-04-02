@@ -267,7 +267,7 @@ export default function DepthMidas() {
       const imgs = (data.photos || []).map(p => ({
         title: p.alt || q,
         thumb: p.src.medium,
-        full: p.src.large,
+        full: p.src.medium,
         photographer: p.photographer,
       }));
       setModalImages(prev => page === 1 ? imgs : [...prev, ...imgs]);
@@ -373,9 +373,9 @@ export default function DepthMidas() {
         @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
         .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(6px)}
         .modal-panel{background:#0e0c16;border:1px solid rgba(255,255,255,.1);border-radius:16px;width:min(760px,95vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
-        .th{border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:1;border:2px solid transparent;transition:border-color .15s}
+        .th{border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:1;border:2px solid transparent;transition:border-color .15s;background:rgba(255,255,255,.06);animation:pulse 1.5s ease infinite}
         .th:hover{border-color:#00d4ff}
-        .th img{width:100%;height:100%;object-fit:cover;display:block}
+        .th img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .2s}
         .mi{flex:1;padding:6px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#ccc;font-size:12px;outline:none;font-family:inherit}
         .mi:focus{border-color:rgba(0,212,255,.4)}
         .sk{border-radius:8px;aspect-ratio:1;background:rgba(255,255,255,.04);animation:pulse 1.5s ease infinite}
@@ -559,7 +559,7 @@ export default function DepthMidas() {
                     ? <div style={{gridColumn:"1/-1",textAlign:"center",padding:40,color:"#5a5470",fontSize:12}}>Inga bilder hittades</div>
                     : modalImages.map((img,i)=>(
                         <div key={i} className="th" onClick={()=>pickImage(img)} title={img.title}>
-                          <img src={img.thumb} alt={img.title} loading="lazy" crossOrigin="anonymous"/>
+                          <img src={img.thumb} alt={img.title} loading="lazy" crossOrigin="anonymous" onLoad={e=>{e.currentTarget.style.opacity='1';}} onError={e=>{e.currentTarget.style.opacity='.25';e.currentTarget.parentElement.style.animation='none';}}/>
                         </div>
                       ))
                 }
