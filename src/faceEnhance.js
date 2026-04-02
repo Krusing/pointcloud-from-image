@@ -4,7 +4,11 @@ const WASM_URL  = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 
 // Nose tip — the very front of the nose (landmarks on the tip itself)
-const NOSE_TIP_IDXS    = new Set([1, 4, 94]);
+const NOSE_TIP_IDXS    = new Set([1, 4]);
+
+// Nose base / columella — junction between nose and upper lip, kept separate
+// to prevent nose_tip's Gaussian from bleeding into the lip region
+const NOSE_BASE_IDXS   = new Set([94]);
 
 // Nose bridge — from mid-nose up toward the brow
 const NOSE_BRIDGE_IDXS = new Set([6, 168, 195, 197]);
@@ -26,9 +30,9 @@ const MOUTH_IDXS = new Set([
   178, 181, 185, 191, 375, 402, 405, 409, 415,
 ]);
 
-// sigma in normalised image-width units — nose_tip deliberately wide to cover the whole tip
 const SIGMA = {
-  nose_tip:    0.030,
+  nose_tip:    0.020,
+  nose_base:   0.010,
   nose_bridge: 0.018,
   nose_ala:    0.012,
   eye:         0.012,
@@ -38,6 +42,7 @@ const SIGMA = {
 
 function getRegion(i) {
   if (NOSE_TIP_IDXS.has(i))    return 'nose_tip';
+  if (NOSE_BASE_IDXS.has(i))   return 'nose_base';
   if (NOSE_BRIDGE_IDXS.has(i)) return 'nose_bridge';
   if (NOSE_ALA_IDXS.has(i))    return 'nose_ala';
   if (EYE_IDXS.has(i))         return 'eye';
@@ -73,7 +78,7 @@ export async function computeFaceCorrections(imgEl, outW, outH) {
   for (const p of pts) zSum += p.z;
   const zFaceMean = zSum / pts.length;
 
-  const regions = ['nose_tip', 'nose_bridge', 'nose_ala', 'eye', 'mouth', 'other'];
+  const regions = ['nose_tip', 'nose_base', 'nose_bridge', 'nose_ala', 'eye', 'mouth', 'other'];
   const acc = {}, wgt = {};
   for (const r of regions) {
     acc[r] = new Float32Array(outW * outH);

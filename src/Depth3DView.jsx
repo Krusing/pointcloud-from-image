@@ -87,6 +87,7 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
   const prevSplitRef      = useRef(-1);   // force initial index build
   const clipMinRef        = useRef(0);
   const clipMaxRef        = useRef(1);
+  const depthMaxRef       = useRef(1);
   const pointModeRef      = useRef(false);
   const pointSizeRef      = useRef(2);
   const sculptModeRef     = useRef(false);
@@ -107,6 +108,8 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
     const gl = canvas.getContext("webgl");
     if (!gl) return;
     gl.getExtension("OES_element_index_uint");
+
+    depthMaxRef.current = 1;
 
     let canvasRect = canvas.getBoundingClientRect();
     let brushX = 0, brushY = 0;
@@ -305,7 +308,8 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
           changedErased = true;
         } else {
           const falloff = Math.exp(-d2 / (2 * sig2));
-          depths[idx] = Math.max(0, Math.min(1, depths[idx] + delta * brushStrengthRef.current * falloff));
+          depths[idx] = Math.max(0, depths[idx] + delta * brushStrengthRef.current * falloff);
+          if (depths[idx] > depthMaxRef.current) depthMaxRef.current = depths[idx];
           changedDepth = true;
         }
       }
@@ -499,8 +503,8 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
 
       gl.uniformMatrix4fv(uMVPLoc,   false, mvp);
       gl.uniform1f(uScaleLoc,  depthScaleRef.current);
-      gl.uniform1f(uMinLoc,    clipMinRef.current);
-      gl.uniform1f(uMaxLoc,    clipMaxRef.current);
+      gl.uniform1f(uMinLoc,    clipMinRef.current * depthMaxRef.current);
+      gl.uniform1f(uMaxLoc,    clipMaxRef.current * depthMaxRef.current);
       gl.uniform1f(uPSizeLoc,  pointSizeRef.current);
       gl.uniform1f(uSculptActLoc,  sculptModeRef.current ? 1 : 0);
       gl.uniform1f(uEraseModeULoc, eraseModeRef.current  ? 1 : 0);
@@ -605,12 +609,17 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
           const dx = vi - cx, dy = vj - cy;
           const w  = Math.exp(-(dx * dx + dy * dy) / sig2);
           const idx = vj * GRID + vi;
-          depthsRef.current[idx] = Math.max(0, Math.min(1,
+          depthsRef.current[idx] = Math.max(0,
             depthsRef.current[idx] + lm.corr * scale * w
-          ));
+          );
         }
       }
     }
+
+    let newMax = 0;
+    for (let k = 0; k < depthsRef.current.length; k++)
+      if (depthsRef.current[k] > newMax) newMax = depthsRef.current[k];
+    depthMaxRef.current = newMax;
 
     const gl = glRef.current;
     gl.bindBuffer(gl.ARRAY_BUFFER, depthBufRef.current);

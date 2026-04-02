@@ -6,4 +6,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@xenova/transformers"],
   },
+  resolve: {
+    alias: { "onnxruntime-web": "onnxruntime-web/dist/ort.min.js" },
+  },
 });
