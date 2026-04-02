@@ -716,18 +716,18 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
           <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 192, background: "rgba(6,4,16,.97)", borderLeft: "1px solid rgba(255,255,255,.12)", padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto", zIndex: 2 }}>
             <div style={{ fontSize: 11, color: "#aaa", letterSpacing: 1, textTransform: "uppercase", borderBottom: "1px solid rgba(255,255,255,.08)", paddingBottom: 10 }}>◎ Ansikte</div>
             {[
-              ["nose_tip",    "Nässpets",   "Hur långt nässpetsen sticker ut"],
-              ["nose_bridge", "Näsbrygga",  "Höjd längs näsryggen"],
-              ["nose_ala",    "Näsvingar",  "Djup vid näsöppningarna"],
-              ["eye",         "Ögon",       "Ögonhålans djup"],
-              ["mouth",       "Mun",        "Läppar och mungipa"],
-            ].map(([k, label, hint]) => (
+              ["nose_tip",    "Nässpets",   "Hur långt nässpetsen sticker ut",  0, 5],
+              ["nose_bridge", "Näsbrygga",  "Höjd längs näsryggen",             0, 5],
+              ["nose_ala",    "Näsvingar",  "Djup vid näsöppningarna",          0, 5],
+              ["eye",         "Ögon",       "Ögonhålans djup inåt",            -5, 0],
+              ["mouth",       "Mun",        "Läppar och mungipa",               0, 5],
+            ].map(([k, label, hint, min, max]) => (
               <div key={k}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 11, color: "#ccc" }}>{label}</span>
                   <span style={{ fontSize: 11, color: "#00d4ff" }}>{faceSliders[k].toFixed(1)}</span>
                 </div>
-                <input type="range" min="0" max="5" step="0.1" value={faceSliders[k]}
+                <input type="range" min={min} max={max} step="0.1" value={faceSliders[k]}
                   onChange={e => handleFaceSlider(k, parseFloat(e.target.value))}
                   style={{ width: "100%", accentColor: "#00d4ff" }}
                 />
@@ -735,7 +735,7 @@ export default function Depth3DView({ depthData, depthW, depthH, imageCanvas, on
               </div>
             ))}
             <div style={{ marginTop: "auto", fontSize: 11, color: "#333", lineHeight: 1.8 }}>
-              0 = av · 1 = naturligt<br/>2–3 = förstärkt
+              0 = av · ögon: dra vänster för djup
             </div>
           </div>
         )}
