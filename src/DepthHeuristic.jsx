@@ -109,7 +109,8 @@ export default function DepthHeuristic() {
   const depthRef = useRef(null), origRef = useRef(null), splitRef = useRef(null);
   const dispOrigRef = useRef(null), dispDepthRef = useRef(null), splitContainerRef = useRef(null);
   const dragging = useRef(false), rawDepthRef = useRef(null), dimRef = useRef({ w: 0, h: 0 });
-  const sentinelRef = useRef(null);
+  const sentinelRef   = useRef(null);
+  const gridScrollRef = useRef(null);
   const activeQueryRef = useRef("");
   const loadMoreFnRef = useRef(null);
 
@@ -178,9 +179,9 @@ export default function DepthHeuristic() {
   useEffect(()=>{if(showSplit)drawSplit(splitX);},[showSplit,splitX,drawSplit,depthStats]);
   useEffect(()=>{if(!showSplit&&image)setTimeout(copyToDisplay,20);},[showSplit,image,copyToDisplay]);
 
-  const searchPexels = useCallback(async (q, page = 1) => {
+  const searchPexels = useCallback(async (q, page = 1, replace = false) => {
     if (!q.trim()) return;
-    if (page === 1) { activeQueryRef.current = q; setModalImages([]); }
+    if (page === 1 || replace) { activeQueryRef.current = q; setModalImages([]); gridScrollRef.current?.scrollTo(0, 0); }
     setModalLoading(true);
     try {
       const res = await fetch(
@@ -194,7 +195,7 @@ export default function DepthHeuristic() {
         full: p.src.medium,
         photographer: p.photographer,
       }));
-      setModalImages(prev => page === 1 ? imgs : [...prev, ...imgs]);
+      setModalImages(prev => (page === 1 || replace) ? imgs : [...prev, ...imgs]);
       setModalPage(page);
       setModalHasMore(!!data.next_page);
     } catch(e) {
@@ -220,7 +221,7 @@ export default function DepthHeuristic() {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) loadMoreFnRef.current?.(); },
-      { threshold: 0.1 }
+      { root: gridScrollRef.current, threshold: 0 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -275,6 +276,7 @@ export default function DepthHeuristic() {
         @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
         .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(6px)}
         .modal-panel{background:#0e0c16;border:1px solid rgba(255,255,255,.1);border-radius:16px;width:min(760px,95vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+        .no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}.no-scrollbar::-webkit-scrollbar{display:none}
         .th{border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:1;border:2px solid transparent;transition:border-color .15s;background:rgba(255,255,255,.06);animation:pulse 1.5s ease infinite}
         .th:hover{border-color:#00d4ff}
         .th img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .2s}
@@ -393,8 +395,11 @@ export default function DepthHeuristic() {
                   placeholder="Sök egna bilder…"/>
                 <button className="mb" onClick={()=>{if(modalSearch.trim()){setModalPreset(-1);searchPexels(modalSearch);}}}>Sök</button>
               </div>
+              <button className="mb" disabled={modalLoading} title="Nästa omgång bilder"
+                onClick={()=>searchPexels(activeQueryRef.current, modalHasMore ? modalPage+1 : 1, true)}
+                style={{flexShrink:0,opacity:modalLoading?0.4:1}}>↻</button>
             </div>
-            <div style={{padding:16,overflowY:"auto",flex:1}}>
+            <div ref={gridScrollRef} className="no-scrollbar" style={{padding:16,overflowY:"scroll",flex:1}}>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
                 {modalLoading&&modalImages.length===0
                   ? Array.from({length:16}).map((_,i)=><div key={i} className="sk" style={{animationDelay:`${i*0.04}s`}}/>)
