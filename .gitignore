@@ -1,0 +1,9 @@
+*
+!src/
+!src/**
+!.env.default
+!.gitignore
+!eslint.config.js
+!index.html
+!package.json
+!vite.config.js
